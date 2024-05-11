@@ -1,0 +1,47 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the "main" branch
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+
+      - name: Package OpenWrt Firmware
+        uses: unifreq/openwrt_packit@master
+        env:
+          OPENWRT_ARMVIRT: openwrt/bin/targets/*/*/*rootfs.tar.gz
+          PACKAGE_SOC: s905d
+          KERNEL_VERSION_NAME: 6.6.30
+          KERNEL_AUTO_LATEST: true
+          SCRIPT_S905D: mk_s905d_n1.sh
+
+      - name: Upload OpenWrt Firmware to Release
+        uses: ncipollo/release-action@main
+        with:
+          tag: openwrt_armvirt_v8_${{ env.PACKAGED_OUTPUTDATE }}
+          artifacts: ${{ env.PACKAGED_OUTPUTPATH }}/*
+          allowUpdates: true
+          token: ${{ secrets.GH_TOKEN }}
+          body: |
+            This is OpenWrt firmware for Armvirt 64
+            * Firmware information
+            Default IP: 192.168.1.1
+            Default username: root
+            Default password: password
